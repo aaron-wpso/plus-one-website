@@ -15,7 +15,12 @@ const services = [
 export function ContactForm() {
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const [selected, setSelected] = useState<string[]>([]);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [business, setBusiness] = useState("");
+  const [message, setMessage] = useState("");
 
   function toggleService(s: string) {
     setSelected((prev) =>
@@ -26,10 +31,20 @@ export function ContactForm() {
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
-    // TODO: wire up to /api/contact route
-    await new Promise((r) => setTimeout(r, 1000));
-    setLoading(false);
-    setSubmitted(true);
+    setError("");
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, business, services: selected, message }),
+      });
+      if (!res.ok) throw new Error();
+      setSubmitted(true);
+    } catch {
+      setError("Something went wrong. Please email us directly at hello@plusonesoftwaresolution.com");
+    } finally {
+      setLoading(false);
+    }
   }
 
   if (submitted) {
@@ -67,6 +82,8 @@ export function ContactForm() {
           required
           type="text"
           placeholder="Your full name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
           className="w-full h-12 px-4 rounded-lg border border-[#E5E5DF] bg-white text-[15px] text-[#111110] placeholder:text-[#9B9B92] focus:outline-none focus:border-[#EA580C] transition-colors duration-150"
           style={{ fontFamily: "var(--font-inter)" }}
         />
@@ -84,6 +101,8 @@ export function ContactForm() {
           required
           type="email"
           placeholder="your@email.com"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
           className="w-full h-12 px-4 rounded-lg border border-[#E5E5DF] bg-white text-[15px] text-[#111110] placeholder:text-[#9B9B92] focus:outline-none focus:border-[#EA580C] transition-colors duration-150"
           style={{ fontFamily: "var(--font-inter)" }}
         />
@@ -100,6 +119,8 @@ export function ContactForm() {
         <input
           type="text"
           placeholder="e.g. F&B, Interior Design, Fitness..."
+          value={business}
+          onChange={(e) => setBusiness(e.target.value)}
           className="w-full h-12 px-4 rounded-lg border border-[#E5E5DF] bg-white text-[15px] text-[#111110] placeholder:text-[#9B9B92] focus:outline-none focus:border-[#EA580C] transition-colors duration-150"
           style={{ fontFamily: "var(--font-inter)" }}
         />
@@ -170,10 +191,21 @@ export function ContactForm() {
         <textarea
           rows={4}
           placeholder="What's the biggest operational challenge you're facing right now?"
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
           className="w-full px-4 py-3 rounded-lg border border-[#E5E5DF] bg-white text-[15px] text-[#111110] placeholder:text-[#9B9B92] focus:outline-none focus:border-[#EA580C] transition-colors duration-150 resize-none"
           style={{ fontFamily: "var(--font-inter)" }}
         />
       </div>
+
+      {error && (
+        <p
+          className="text-[13px] text-red-600 leading-relaxed"
+          style={{ fontFamily: "var(--font-inter)" }}
+        >
+          {error}
+        </p>
+      )}
 
       <button
         type="submit"
